@@ -1,0 +1,18 @@
+# Core dependencies
+python-dotenv
+pandas
+numpy
+
+# Database & ORM
+sqlalchemy
+psycopg2-binary
+
+# Dashboarding & Visualization
+streamlit
+plotly
+
+# Machine Learning
+scikit-learn
+xgboost
+prophet
+statsmodels
