@@ -34,15 +34,12 @@ from queries import (
 )
 
 def create_db_engine_from_secrets():
-    """ Build a DB engine from Streamlit secrets. """
-    db_host = st.secrets["db_credentials"]["host"]
-    db_port = st.secrets["db_credentials"]["port"]
-    db_user = st.secrets["db_credentials"]["user"]
-    db_pass = st.secrets["db_credentials"]["password"]
-    db_name = st.secrets["db_credentials"]["database"]
-
-    db_url = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
-    engine = create_engine(db_url)
+    """
+    Build a DB engine using the Neon connection string stored as a single key in Streamlit Secrets.
+    On Streamlit Cloud, add your connection string with key DATABASE_URL in Settings > Secrets.
+    """
+    DATABASE_URL = st.secrets["DATABASE_URL"]
+    engine = create_engine(DATABASE_URL)
     return engine
 
 st.set_page_config(page_title="E-Commerce Analytics", layout="wide")
