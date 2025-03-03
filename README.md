@@ -69,6 +69,6 @@ Use the sidebar to navigate betIen different analytics modules (e.g., Business O
 ---
 
 ## Contact
-- **Project Lead**: Colby Reichenbach  
+**Project Lead**: Colby Reichenbach  
 [colbyrreichenbach@gmail.com](mailto:colbyrreichenbach@gmail.com)  
 [Linkedin](https://www.linkedin.com/in/colby-reichenbach/)
