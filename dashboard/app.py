@@ -1,13 +1,16 @@
 # app.py
 import sys
 import os
+
+from sqlalchemy import create_engine
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-from ecommerce_data_project.dashboard.queries import (
+from queries import (
     # BUSINESS & SALES
     get_business_overview,
     get_monthly_revenue_trends,
@@ -30,7 +33,21 @@ from ecommerce_data_project.dashboard.queries import (
     get_shipping_performance
 )
 
+def create_db_engine_from_secrets():
+    """ Build a DB engine from Streamlit secrets. """
+    db_host = st.secrets["db_credentials"]["host"]
+    db_port = st.secrets["db_credentials"]["port"]
+    db_user = st.secrets["db_credentials"]["user"]
+    db_pass = st.secrets["db_credentials"]["password"]
+    db_name = st.secrets["db_credentials"]["database"]
+
+    db_url = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
+    engine = create_engine(db_url)
+    return engine
+
 st.set_page_config(page_title="E-Commerce Analytics", layout="wide")
+
+engine = create_db_engine_from_secrets()
 
 st.sidebar.title("Navigation")
 page = st.sidebar.radio(
@@ -51,9 +68,9 @@ if page == "Business Overview":
     st.title("Business Overview")
 
     # Load Data
-    overview = get_business_overview()
-    monthly_rev = get_monthly_revenue_trends()
-    yearly_rev = get_yearly_revenue()
+    overview = get_business_overview(engine)
+    monthly_rev = get_monthly_revenue_trends(engine)
+    yearly_rev = get_yearly_revenue(engine)
 
     # KPI Cards
     col1, col2, col3, col4 = st.columns(4)
@@ -145,8 +162,8 @@ if page == "Product Performance":
     st.title("Product Performance")
 
     # -- LOAD DATA --
-    category_data = get_category_sales(limit=30)  # now includes both units_sold + revenue
-    df_returns = get_return_rate()
+    category_data = get_category_sales(engine, limit=30)  # now includes both units_sold + revenue
+    df_returns = get_return_rate(engine)
 
     # If 'category_data' is empty, warn the user and bail out
     if category_data.empty:
@@ -255,9 +272,9 @@ if page == "Product Performance":
 elif page == "Sales & Orders":
     st.title("Sales & Order Analytics")
 
-    orders_df = get_monthly_orders()
-    order_status_df = get_order_status_distribution()
-    revenue_contrib_df = get_revenue_contribution()
+    orders_df = get_monthly_orders(engine)
+    order_status_df = get_order_status_distribution(engine)
+    revenue_contrib_df = get_revenue_contribution(engine)
 
     # 1) TIME GRANULARITY
     st.subheader("Order Volume Over Time")
@@ -349,9 +366,9 @@ elif page == "Sales & Orders":
 elif page == "Customer Insights":
     st.title("Customer Insights")
 
-    clv_df = get_customer_lifetime_value()
-    repeat_df = get_repeat_customer_details()  # now referencing customer_unique_id
-    pay_prefs_df = get_customer_payment_preferences()
+    clv_df = get_customer_lifetime_value(engine)
+    repeat_df = get_repeat_customer_details(engine)  # now referencing customer_unique_id
+    pay_prefs_df = get_customer_payment_preferences(engine)
 
     # Customer Lifetime Value
     st.subheader("Top 10 Customers by Lifetime Value")
@@ -442,7 +459,7 @@ elif page == "Geographic Insights":
     st.title("Geographic Insights")
 
     # Load Data
-    region_data = get_revenue_by_region()
+    region_data = get_revenue_by_region(engine)
 
     st.subheader("Revenue by State")
     fig_state_rev = px.bar(
@@ -461,7 +478,7 @@ elif page == "Geographic Insights":
         region_data["customer_state"].unique()
     )
     if selected_state:
-        city_data = get_revenue_by_region(state=selected_state)
+        city_data = get_revenue_by_region(engine, state=selected_state)
         if not city_data.empty:
             st.subheader(f"City Revenue in {selected_state}")
             fig_city_rev = px.bar(
@@ -544,7 +561,7 @@ elif page == "Shipping Insights":
     st.title("Shipping Performance")
 
     # Load Data
-    shipping_data = get_shipping_performance()
+    shipping_data = get_shipping_performance(engine)
 
     st.subheader("Delivery Variance by State")
     shipping_data["color"] = shipping_data["delivery_variance"].apply(lambda x: "green" if x < 0 else "red")
@@ -566,7 +583,7 @@ elif page == "Shipping Insights":
         shipping_data["customer_state"].unique()
     )
     if selected_ship_state:
-        city_shipping = get_shipping_performance(state=selected_ship_state)
+        city_shipping = get_shipping_performance(engine, state=selected_ship_state)
         if not city_shipping.empty:
             city_shipping["color"] = city_shipping["delivery_variance"].apply(lambda x: "green" if x < 0 else "red")
             st.subheader(f"City Delivery Variances in {selected_ship_state}")

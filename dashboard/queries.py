@@ -1,26 +1,23 @@
 # queries.py
-from ecommerce_data_project.config.db_config import DB_URL
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 import pandas as pd
 
-engine = create_engine(DB_URL)
-
-def query_database(query, params=None):
+def query_database(query, engine, params=None):
     """
-    Executes a SQL query with optional parameters and returns the result as a Pandas DataFrame.
+    Executes a SQL query with optional parameters using the passed-in engine.
+    Returns a Pandas DataFrame.
     """
     with engine.connect() as conn:
         if params:
             result = conn.execute(text(query), params)
         else:
             result = conn.execute(text(query))
-
         return pd.DataFrame(result.fetchall(), columns=result.keys())
 
 
 # -------------------------  BUSINESS & SALES  ------------------------- #
 
-def get_business_overview():
+def get_business_overview(engine):
     query = """
         SELECT 
             COUNT(DISTINCT o.order_id) AS total_orders,  
@@ -32,9 +29,10 @@ def get_business_overview():
         JOIN customers c ON o.customer_id = c.customer_id
         WHERE o.order_status = 'delivered';
     """
-    return query_database(query)
+    return query_database(query, engine)
 
-def get_monthly_revenue_trends():
+
+def get_monthly_revenue_trends(engine):
     query = """
         SELECT DATE_TRUNC('month', o.order_purchase_timestamp) AS month,
                SUM(oi.price + oi.freight_value) AS total_revenue
@@ -44,9 +42,10 @@ def get_monthly_revenue_trends():
         GROUP BY month
         ORDER BY month;
     """
-    return query_database(query)
+    return query_database(query, engine)
 
-def get_yearly_revenue():
+
+def get_yearly_revenue(engine):
     query = """
         SELECT EXTRACT(YEAR FROM o.order_purchase_timestamp) AS year,
                SUM(oi.price + oi.freight_value) AS total_revenue
@@ -56,9 +55,10 @@ def get_yearly_revenue():
         GROUP BY year
         ORDER BY year;
     """
-    return query_database(query)
+    return query_database(query, engine)
 
-def get_monthly_orders():
+
+def get_monthly_orders(engine):
     query = """
         SELECT DATE_TRUNC('day', order_purchase_timestamp) AS order_day,
                DATE_TRUNC('month', order_purchase_timestamp) AS month,
@@ -68,26 +68,20 @@ def get_monthly_orders():
         GROUP BY order_day, month
         ORDER BY order_day;
     """
-    return query_database(query)
+    return query_database(query, engine)
 
-def get_order_status_distribution():
+
+def get_order_status_distribution(engine):
     query = """
         SELECT order_status, COUNT(order_id) AS total_orders
         FROM orders
         GROUP BY order_status
         ORDER BY total_orders DESC;
     """
-    return query_database(query)
+    return query_database(query, engine)
 
-def get_revenue_contribution():
-    """
-    Breaks down orders by how many items (product_id) are in each,
-    then sums the total revenue from those items.
 
-    If this returns an empty DataFrame, either:
-      - There's no 'delivered' data, or
-      - The join keys are mismatched in the underlying database.
-    """
+def get_revenue_contribution(engine):
     query = """
         SELECT order_count, 
                SUM(total_revenue) AS total_revenue
@@ -103,16 +97,12 @@ def get_revenue_contribution():
         GROUP BY order_count
         ORDER BY order_count;
     """
-    return query_database(query)
+    return query_database(query, engine)
 
 
 # -------------------------  PRODUCT PERFORMANCE  ------------------------- #
 
-def get_category_sales(limit=30):
-    """
-    Returns both total units sold and total revenue by product_category_name_english.
-    (limit param can be increased as needed.)
-    """
+def get_category_sales(engine, limit=30):
     query = """
         SELECT p.product_category_name_english,
                COUNT(oi.product_id) AS total_units_sold,
@@ -125,9 +115,10 @@ def get_category_sales(limit=30):
         ORDER BY total_units_sold DESC
         LIMIT :limit;
     """
-    return query_database(query, {"limit": limit})
+    return query_database(query, engine, {"limit": limit})
 
-def get_return_rate(limit=10):
+
+def get_return_rate(engine, limit=10):
     query = """
         SELECT 
             p.product_category_name_english,
@@ -139,15 +130,12 @@ def get_return_rate(limit=10):
         ORDER BY return_rate DESC
         LIMIT :limit;
     """
-    return query_database(query, {"limit": limit})
+    return query_database(query, engine, {"limit": limit})
 
 
 # -------------------------  CUSTOMER INSIGHTS  ------------------------- #
 
-def get_customer_lifetime_value():
-    """
-    Top 10 customers by total spent, along with # of orders, avg order value.
-    """
+def get_customer_lifetime_value(engine):
     query = """
         SELECT 
             c.customer_unique_id, 
@@ -162,17 +150,10 @@ def get_customer_lifetime_value():
         ORDER BY total_spent DESC
         LIMIT 10;
     """
-    return query_database(query)
+    return query_database(query, engine)
 
 
-def get_repeat_customer_details(limit=10):
-    """
-    Focus on repeated customers by referencing c.customer_unique_id
-    rather than raw customer_id, which might differ if the DB is structured that way.
-
-    This returns top product categories that repeat customers have purchased,
-    sorted by # of purchases.
-    """
+def get_repeat_customer_details(engine, limit=10):
     query = """
         SELECT p.product_category_name_english,
                COUNT(*) AS total_purchases,
@@ -194,22 +175,22 @@ def get_repeat_customer_details(limit=10):
         ORDER BY total_purchases DESC
         LIMIT :limit;
     """
-    return query_database(query, {"limit": limit})
+    return query_database(query, engine, {"limit": limit})
 
 
-def get_customer_payment_preferences():
+def get_customer_payment_preferences(engine):
     query = """
         SELECT payment_type, COUNT(*) AS usage_count
         FROM payments
         GROUP BY payment_type
         ORDER BY usage_count DESC;
     """
-    return query_database(query)
+    return query_database(query, engine)
 
 
 # -------------------------  GEOGRAPHIC & SHIPPING  ------------------------- #
 
-def get_revenue_by_region(state=None):
+def get_revenue_by_region(engine, state=None):
     if state:
         query = """
             SELECT c.customer_state, c.customer_city, 
@@ -222,7 +203,7 @@ def get_revenue_by_region(state=None):
             GROUP BY c.customer_state, c.customer_city
             ORDER BY total_revenue DESC;
         """
-        return query_database(query, {"state": state})
+        return query_database(query, engine, {"state": state})
     else:
         query = """
             SELECT c.customer_state, 
@@ -234,10 +215,10 @@ def get_revenue_by_region(state=None):
             GROUP BY c.customer_state
             ORDER BY total_revenue DESC;
         """
-        return query_database(query)
+        return query_database(query, engine)
 
 
-def get_shipping_performance(state=None):
+def get_shipping_performance(engine, state=None):
     if state:
         query = """
             SELECT c.customer_state, c.customer_city, 
@@ -252,7 +233,7 @@ def get_shipping_performance(state=None):
             GROUP BY c.customer_state, c.customer_city
             ORDER BY avg_actual_delivery_time DESC;
         """
-        data = query_database(query, {"state": state})
+        data = query_database(query, engine, {"state": state})
     else:
         query = """
             SELECT c.customer_state, 
@@ -266,91 +247,11 @@ def get_shipping_performance(state=None):
             GROUP BY c.customer_state
             ORDER BY avg_actual_delivery_time DESC;
         """
-        data = query_database(query)
+        data = query_database(query, engine)
 
     if not data.empty:
         data["delivery_variance"] = data["avg_actual_delivery_time"] - data["avg_estimated_delivery_time"]
     return data
 
-# -------------------------  ADDITIONAL QUERIES FOR EXTERNAL DASHBOARD  ------------------------- #
 
-def get_new_customers_by_year():
-    """
-    Returns the number of new customers per year based on their first delivered order.
-    This helps stakeholders understand customer acquisition trends.
-    """
-    query = """
-    WITH first_orders AS (
-      SELECT c.customer_unique_id,
-             MIN(o.order_purchase_timestamp) AS first_order_date
-      FROM orders o
-      JOIN customers c ON o.customer_id = c.customer_id
-      WHERE o.order_status = 'delivered'
-      GROUP BY c.customer_unique_id
-    )
-    SELECT EXTRACT(YEAR FROM first_order_date) AS first_order_year,
-           COUNT(customer_unique_id) AS new_customers
-    FROM first_orders
-    GROUP BY first_order_year
-    ORDER BY first_order_year;
-    """
-    return query_database(query)
-
-def get_cohort_analysis():
-    """
-    Returns a simple cohort analysis: for each cohort defined by the year of a customer's first order,
-    the number of customers in that cohort is returned.
-    This allows for an understanding of customer retention trends over time.
-    """
-    query = """
-    WITH first_orders AS (
-      SELECT c.customer_unique_id,
-             MIN(o.order_purchase_timestamp) AS first_order_date
-      FROM orders o
-      JOIN customers c ON o.customer_id = c.customer_id
-      WHERE o.order_status = 'delivered'
-      GROUP BY c.customer_unique_id
-    )
-    SELECT EXTRACT(YEAR FROM first_order_date) AS cohort_year,
-           COUNT(customer_unique_id) AS num_customers
-    FROM first_orders
-    GROUP BY cohort_year
-    ORDER BY cohort_year;
-    """
-    return query_database(query)
-
-def get_category_growth_by_year():
-    """
-    Returns total revenue by product category for each year.
-    This can help stakeholders see which product categories are growing or declining over time.
-    """
-    query = """
-    SELECT EXTRACT(YEAR FROM o.order_purchase_timestamp) AS order_year,
-           p.product_category_name_english,
-           SUM(oi.price + oi.freight_value) AS total_revenue
-    FROM order_items oi
-    JOIN orders o ON oi.order_id = o.order_id
-    JOIN products p ON oi.product_id = p.product_id
-    WHERE o.order_status = 'delivered'
-    GROUP BY order_year, p.product_category_name_english
-    ORDER BY order_year, total_revenue DESC;
-    """
-    return query_database(query)
-
-def get_shipping_performance_by_year():
-    """
-    Returns average actual and estimated delivery times by year.
-    Stakeholders can use this information to monitor improvements in logistics efficiency.
-    """
-    query = """
-    SELECT EXTRACT(YEAR FROM o.order_purchase_timestamp) AS order_year,
-           ROUND(AVG(EXTRACT(DAY FROM (o.order_delivered_customer_date - o.order_purchase_timestamp))), 2)
-           AS avg_actual_delivery_time,
-           ROUND(AVG(EXTRACT(DAY FROM (o.order_estimated_delivery_date - o.order_purchase_timestamp))), 2)
-           AS avg_estimated_delivery_time
-    FROM orders o
-    WHERE o.order_status = 'delivered'
-    GROUP BY order_year
-    ORDER BY order_year;
-    """
-    return query_database(query)
+# Additional queries if needed...
