@@ -49,24 +49,15 @@ By providing an **actionable** snapshot of operational metrics, I can identify *
 2. **Supplemental or Synthetic Data**  
    - For user privacy or testing, some data columns may be anonymized or synthetically generated.  
 
-For a detailed breakdown of each table’s schema and lineage, see [`DATA_SOURCES.txt`](DATA_SOURCES.txt).
+[Raw Dataset Avaliable here](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)
 
 ---
 
 ## Dashboard Link
 I have deployed a **live** version of this dashboard at:  
-**[Streamlit Cloud Link](https://your-streamlit-cloud-app-url)**  
+**[Streamlit Cloud Link](https://ecommerce-dhsrx49ubnacpn9adyrh9n.streamlit.app)**  
 
 Use the sidebar to navigate betIen different analytics modules (e.g., Business Overview, Product Performance, Shipping Insights). For any issues, contact the data team.
-
----
-
-## Read-Only Database Access (Neon)
-The production dataset is hosted on **Neon** for demonstration:
-https://console.neon.tech/app/projects/blue-frog-75979168/branches/br-green-moon-a8wf1y3r/tables?database=ecommerce
-
-
-Credentials for this read-only user are managed via Streamlit secrets, so they are **not** publicly visible in this repository. If you need direct read-only access for advanced queries, request it from the Data Engineering team.
 
 ---
 
@@ -80,13 +71,5 @@ Credentials for this read-only user are managed via Streamlit secrets, so they a
 
 ## Contact
 - **Project Lead**: Colby Reichenbach [colbyrreichenbach@gmail.com](mailto:colbyrreichenbach@gmail.com)  
-[Linkedin](https://www.linkedin.com/in/colby-reichenbach/)
+[Linkedin](https://www.linkedin.com/in/colby-reichenbach/)  
 Please reach out for assistance, feedback, or inquiries regarding the system’s usage and further development.
-
----
-
-## License
-This project is an **internal, proprietary tool** for Company XYZ. Refer to [LICENSE.md](LICENSE.md) for terms of use. Unauthorized distribution or replication of data is prohibited.
-
----
-
