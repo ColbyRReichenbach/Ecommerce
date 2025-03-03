@@ -70,6 +70,6 @@ Use the sidebar to navigate betIen different analytics modules (e.g., Business O
 ---
 
 ## Contact
-- **Project Lead**: Colby Reichenbach [colbyrreichenbach@gmail.com](mailto:colbyrreichenbach@gmail.com)  
-[Linkedin](https://www.linkedin.com/in/colby-reichenbach/)  
-Please reach out for assistance, feedback, or inquiries regarding the system’s usage and further development.
+- **Project Lead**: Colby Reichenbach  
+[colbyrreichenbach@gmail.com](mailto:colbyrreichenbach@gmail.com)  
+[Linkedin](https://www.linkedin.com/in/colby-reichenbach/)
