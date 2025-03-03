@@ -11,7 +11,6 @@ This repository hosts an **internal analytics dashboard** for Company XYZ’s E-
 - [Read-Only Database Access (Neon)](#read-only-database-access-neon)  
 - [Future Enhancements](#future-enhancements)  
 - [Contact](#contact)  
-- [License](#license)
 
 ---
 
