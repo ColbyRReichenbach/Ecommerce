@@ -8,7 +8,6 @@ This repository hosts an **internal analytics dashboard** for Company XYZ’s E-
 - [ML Models (Customer Segmentation)](#ml-models-customer-segmentation)  
 - [Data Sources](#data-sources)  
 - [Dashboard Link](#dashboard-link)  
-- [Read-Only Database Access (Neon)](#read-only-database-access-neon)  
 - [Future Enhancements](#future-enhancements)  
 - [Contact](#contact)  
 
@@ -45,10 +44,8 @@ By providing an **actionable** snapshot of operational metrics, I can identify *
 1. **Core E-Commerce DB**  
    - Contains orders, order_items, customers, products, shipping data, etc.  
    - Hosted in a read-only Postgres instance on Neon for demonstration.  
-2. **Supplemental or Synthetic Data**  
-   - For user privacy or testing, some data columns may be anonymized or synthetically generated.  
 
-[Raw Dataset Avaliable here](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)
+[Raw Datasets Avaliable here](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)
 
 ---
 
@@ -56,12 +53,12 @@ By providing an **actionable** snapshot of operational metrics, I can identify *
 I have deployed a **live** version of this dashboard at:  
 **[Streamlit Cloud Link](https://ecommerce-dhsrx49ubnacpn9adyrh9n.streamlit.app)**  
 
-Use the sidebar to navigate betIen different analytics modules (e.g., Business Overview, Product Performance, Shipping Insights). For any issues, contact the data team.
+Use the sidebar to navigate betIen different analytics modules (e.g., Business Overview, Product Performance, Shipping Insights).
 
 ---
 
 ## Future Enhancements
-1. **Forecasting Models**: Once I accumulate sufficient historical data, I plan to integrate ARIMA/Prophet for monthly or Iekly revenue forecasts.  
+1. **Forecasting Models**: Once I accumulate sufficient historical data, I plan to integrate ARIMA/Prophet for monthly or weekly revenue forecasts.  
 2. **Recommendation Systems**: Cross-sell and upsell suggestions using item-based or user-based collaborative filtering.  
 3. **Pricing Optimization**: Leverage advanced elasticity analysis if competitor or demand data becomes available.  
 4. **Scalability**: Dockerize the application for broader internal deployment or multi-tenant usage.
