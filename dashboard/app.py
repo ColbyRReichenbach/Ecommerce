@@ -294,8 +294,7 @@ def render_product_portfolio_performance():
 
 
         fig_matrix = px.scatter(
-            # Pass the DataFrame for other potential uses by Plotly, but specify main aesthetics with prepared arrays/series
-            data_frame=cat_data_merged, # Still useful for Plotly to have the full context
+            data_frame=cat_data_merged, 
             x=x_data,
             y=y_data,
             size=size_data if apply_size else None,
@@ -303,12 +302,12 @@ def render_product_portfolio_performance():
             hover_name=hover_name_data,
             color_continuous_scale=px.colors.diverging.RdYlGn_r if apply_color else None,
             range_color=[0, max(10, color_data.max())] if apply_color and color_data is not None and len(color_data)>0 else None,
-            title="Categories: Units vs Revenue" + ((" (Size=" + size_column_name) if apply_size else "") + (", Color=" + color_column_name + ")") if apply_color else ""),
-            labels={'x': 'Total Units Sold', # Use generic 'x', 'y' if passing arrays directly
+            title="Categories: Units vs Revenue" + ((" (Size=" + size_column_name) if apply_size else "") + (", Color=" + color_column_name + ")") if apply_color else "",
+            labels={'x': 'Total Units Sold', 
                     'y': 'Total Revenue ($)',
                     'color': 'Return Rate (%)' if apply_color else '',
                     'size':'Avg Review Score' if apply_size else '',
-                    'hover_name': 'Category'} # Adjust hover_name label
+                    'hover_name': 'Category'}
         )
         fig_matrix.update_traces(textposition='top center')
         st.plotly_chart(fig_matrix, use_container_width=True)
