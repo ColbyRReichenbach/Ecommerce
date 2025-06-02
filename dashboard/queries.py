@@ -150,7 +150,6 @@ def get_category_performance_matrix(_engine, start_date, end_date):
     LEFT JOIN reviews r ON o.order_id = r.order_id -- Join for review scores
     WHERE o.order_status = 'delivered'
       AND o.order_purchase_timestamp BETWEEN :start_date AND :end_date
-      {category_condition}
     GROUP BY p.product_category_name_english
     HAVING p.product_category_name_english IS NOT NULL AND COUNT(DISTINCT oi.order_item_id) > 0;
     """
@@ -168,7 +167,6 @@ def get_category_return_rates(_engine, start_date, end_date):
     JOIN order_items oi ON o.order_id = oi.order_id
     JOIN products p ON oi.product_id = p.product_id
     WHERE o.order_purchase_timestamp BETWEEN :start_date AND :end_date -- Consider if this date filter applies to cancellations
-        {category_condition}
     GROUP BY p.product_category_name_english
     HAVING p.product_category_name_english IS NOT NULL;
     """
