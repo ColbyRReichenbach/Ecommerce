@@ -478,6 +478,41 @@ def get_segment_summary_metrics(_engine, start_date, end_date): # Assumes a 'cus
     # return query_database(_engine, query, {"start_date": start_date, "end_date": end_date})
     return pd.DataFrame()
 
+# queries.py (add these functions)
+
+@st.cache_data
+def get_avg_items_per_order(_engine, start_date, end_date):
+    query = """
+    WITH OrderItemCounts AS (
+        SELECT
+            o.order_id,
+            COUNT(oi.order_item_id) AS item_count
+        FROM orders o
+        JOIN order_items oi ON o.order_id = oi.order_id
+        WHERE o.order_status = 'delivered' -- Or your relevant status filter
+          AND o.order_purchase_timestamp BETWEEN :start_date AND :end_date
+        GROUP BY o.order_id
+    )
+    SELECT
+        AVG(item_count) AS avg_items_per_order,
+        COUNT(order_id) AS total_orders_for_avg_items -- To ensure there are orders
+    FROM OrderItemCounts;
+    """
+    return query_database(_engine, query, {"start_date": start_date, "end_date": end_date})
+
+@st.cache_data
+def get_most_frequent_order_status_nondelivered(_engine, start_date, end_date):
+    query = """
+    SELECT order_status, COUNT(order_id) AS status_count
+    FROM orders
+    WHERE order_status <> 'delivered' AND order_status <> 'canceled' -- Exclude final/negative states
+      AND order_purchase_timestamp BETWEEN :start_date AND :end_date
+    GROUP BY order_status
+    ORDER BY status_count DESC
+    LIMIT 1;
+    """
+    return query_database(_engine, query, {"start_date": start_date, "end_date": end_date})
+
 
 # --- Helper: Get min/max dates from orders table for date picker ---
 @st.cache_data
