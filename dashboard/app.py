@@ -105,9 +105,9 @@ def render_business_health_cockpit():
     main_kpis = kpi_data.iloc[0]
     
     # COGS assumption for GPM (replace with actual logic or remove GPM if not feasible)
+    total_revenue_decimal = main_kpis.get('total_revenue', 0)
     total_revenue = float(total_revenue_decimal)
     COGS_PERCENTAGE = 0.6 # Assume COGS is 60% of revenue
-    total_revenue = main_kpis.get('total_revenue', 0)
     cogs = total_revenue * COGS_PERCENTAGE
     gross_profit = total_revenue - cogs
     gpm = (gross_profit / total_revenue) * 100 if total_revenue else 0
