@@ -134,11 +134,9 @@ def get_new_vs_returning_customer_revenue(_engine, start_date, end_date, freq='M
 # --- 2. Product Portfolio Performance ---
 
 @st.cache_data
-def get_category_performance_matrix(_engine, start_date, end_date, category_filter=None):
+def get_category_performance_matrix(_engine, start_date, end_date):
     
     # Revenue, Units, Avg Price. Review Score/Return Rate require more complex joins/subqueries.
-    category_condition = "AND p.product_category_name_english = :category_filter" if category_filter else ""
-
     query = f"""
     SELECT
         p.product_category_name_english,
@@ -157,14 +155,11 @@ def get_category_performance_matrix(_engine, start_date, end_date, category_filt
     HAVING p.product_category_name_english IS NOT NULL AND COUNT(DISTINCT oi.order_item_id) > 0;
     """
     params = {"start_date": start_date, "end_date": end_date}
-    if category_filter:
-        params["category_filter"] = category_filter
     return query_database(_engine, query, params)
 
 @st.cache_data
-def get_category_return_rates(_engine, start_date, end_date, category_filter=None):
+def get_category_return_rates(_engine, start_date, end_date):
     # This definition of return rate is based on 'canceled' status.
-    category_condition = "AND p.product_category_name_english = :category_filter" if category_filter else ""
     query = f"""
     SELECT
         p.product_category_name_english,
@@ -178,8 +173,6 @@ def get_category_return_rates(_engine, start_date, end_date, category_filter=Non
     HAVING p.product_category_name_english IS NOT NULL;
     """
     params = {"start_date": start_date, "end_date": end_date}
-    if category_filter:
-        params["category_filter"] = category_filter
     return query_database(_engine, query, params)
 
 
