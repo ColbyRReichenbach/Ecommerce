@@ -57,17 +57,6 @@ selected_start_date, selected_end_date = st.sidebar.date_input(
 selected_start_date = datetime.combine(selected_start_date, datetime.min.time())
 selected_end_date = datetime.combine(selected_end_date, datetime.max.time())
 
-# Category Filter
-all_categories_df = query_database(engine, "SELECT DISTINCT product_category_name_english FROM products WHERE product_category_name_english IS NOT NULL ORDER BY 1;") # Assuming product_category_name_english column
-if not all_categories_df.empty:
-    all_categories = ["All"] + all_categories_df["product_category_name_english"].tolist()
-    selected_category_filter = st.sidebar.selectbox("Filter by Product Category", all_categories, key="category_filter_global")
-    if selected_category_filter == "All":
-        selected_category_filter = None # Set to None if 'All' is selected
-else:
-    st.sidebar.text("No categories found for filter.")
-    selected_category_filter = None # Fallback
-
 # Region Filter (Customer State)
 all_states_df = query_database(engine, "SELECT DISTINCT customer_state FROM customers WHERE customer_state IS NOT NULL ORDER BY 1;")
 if not all_states_df.empty:
@@ -188,8 +177,8 @@ def render_product_portfolio_performance():
     st.title("🎯 Product Portfolio Performance")
     st.markdown("Identify which products and categories drive success and monitor returns.")
 
-    cat_perf_df = get_category_performance_matrix(engine, selected_start_date, selected_end_date, category_filter=selected_category_filter)
-    cat_returns_df = get_category_return_rates(engine, selected_start_date, selected_end_date, category_filter=selected_category_filter)
+    cat_perf_df = get_category_performance_matrix(engine, selected_start_date, selected_end_date)
+    cat_returns_df = get_category_return_rates(engine, selected_start_date, selected_end_date)
 
     if cat_perf_df.empty:
         st.warning("No category performance data for the selected period/filter.")
