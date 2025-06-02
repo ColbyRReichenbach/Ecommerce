@@ -354,7 +354,7 @@ def get_top_categories_for_customer_type(_engine, start_date, end_date, customer
 def get_payment_preferences(_engine, start_date, end_date): 
     query = """
     SELECT op.payment_type, COUNT(*) AS usage_count
-    FROM order_payments op
+    FROM payments op
     JOIN orders o ON op.order_id = o.order_id -- Join to filter by order date
     WHERE o.order_purchase_timestamp BETWEEN :start_date AND :end_date
     GROUP BY op.payment_type
