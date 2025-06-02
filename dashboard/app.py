@@ -38,25 +38,47 @@ if not engine:
 # --- Global Filters in Sidebar ---
 st.sidebar.title("Global Filters")
 
-# Date Range Selector
+# Date Range Selector (already implemented and seems okay)
 min_max_dates_df = get_min_max_order_dates(engine)
 if not min_max_dates_df.empty:
     MIN_DATE = pd.to_datetime(min_max_dates_df['min_date'].iloc[0])
     MAX_DATE = pd.to_datetime(min_max_dates_df['max_date'].iloc[0])
-else: # Fallback if query fails or no data
-    MIN_DATE = datetime.now() - timedelta(days=365*2.5) # Approx 2.5 years back
+else:
+    MIN_DATE = datetime.now() - timedelta(days=365*3) # Approx 3 years back
     MAX_DATE = datetime.now()
 
 selected_start_date, selected_end_date = st.sidebar.date_input(
     "Select Date Range",
-    value=(MAX_DATE - timedelta(days=365), MAX_DATE), # Default to last 1 year
+    value=(MAX_DATE - timedelta(days=365), MAX_DATE),
     min_value=MIN_DATE,
     max_value=MAX_DATE,
     key="date_range_selector"
 )
-# Convert to datetime objects if they are not already (st.date_input returns datetime.date)
 selected_start_date = datetime.combine(selected_start_date, datetime.min.time())
 selected_end_date = datetime.combine(selected_end_date, datetime.max.time())
+
+# Category Filter
+all_categories_df = query_database(engine, "SELECT DISTINCT product_category_name_english FROM products WHERE product_category_name_english IS NOT NULL ORDER BY 1;") # Assuming product_category_name_english column
+if not all_categories_df.empty:
+    all_categories = ["All"] + all_categories_df["product_category_name_english"].tolist()
+    selected_category_filter = st.sidebar.selectbox("Filter by Product Category", all_categories, key="category_filter_global")
+    if selected_category_filter == "All":
+        selected_category_filter = None # Set to None if 'All' is selected
+else:
+    st.sidebar.text("No categories found for filter.")
+    selected_category_filter = None # Fallback
+
+# Region Filter (Customer State)
+all_states_df = query_database(engine, "SELECT DISTINCT customer_state FROM customers WHERE customer_state IS NOT NULL ORDER BY 1;")
+if not all_states_df.empty:
+    all_states = ["All"] + all_states_df["customer_state"].tolist()
+    selected_region_filter = st.sidebar.selectbox("Filter by Customer State", all_states, key="region_filter_global")
+    if selected_region_filter == "All":
+        selected_region_filter = None # Set to None if 'All' is selected
+else:
+    st.sidebar.text("No states found for filter.")
+    selected_region_filter = None # Fallback
+
 
 
 # --- Page Navigation ---
