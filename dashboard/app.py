@@ -90,7 +90,7 @@ def display_kpi(label, value, help_text=None, delta=None, delta_color="normal"):
 # --- Page Rendering Functions ---
 
 def render_business_health_cockpit():
-    st.title("📈 Business Health Cockpit")
+    st.title("Business Health")
     st.markdown("Immediate, high-level understanding of overall business health and trajectory.")
     
     kpi_data = get_main_kpis(engine, selected_start_date, selected_end_date)
@@ -105,6 +105,7 @@ def render_business_health_cockpit():
     main_kpis = kpi_data.iloc[0]
     
     # COGS assumption for GPM (replace with actual logic or remove GPM if not feasible)
+    total_revenue = float(total_revenue_decimal)
     COGS_PERCENTAGE = 0.6 # Assume COGS is 60% of revenue
     total_revenue = main_kpis.get('total_revenue', 0)
     cogs = total_revenue * COGS_PERCENTAGE
