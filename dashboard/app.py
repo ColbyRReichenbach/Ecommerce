@@ -313,7 +313,7 @@ def render_product_portfolio_performance():
                     'color': 'Return Rate (%)' if apply_color else '',
                     'size':'Avg Review Score' if apply_size else '',
                     'hover_name': 'Category'} 
-        )
+    )
         fig_matrix.update_traces(textposition='top center')
         st.plotly_chart(fig_matrix, use_container_width=True)
     else:
