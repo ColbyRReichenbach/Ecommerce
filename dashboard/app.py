@@ -13,7 +13,8 @@ from queries import (
     get_top_categories_for_customer_type, get_payment_preferences,
     get_revenue_orders_by_state_map_data, get_shipping_performance_matrix_data, get_delivery_time_breakdown_by_state,
     get_segment_summary_metrics, # This one is conceptual for now
-    get_min_max_order_dates
+    get_min_max_order_dates, get_avg_items_per_order, 
+    get_most_frequent_order_status_nondelivered
 )
 
 st.set_page_config(page_title="E-Commerce Advanced Analytics", layout="wide")
