@@ -497,7 +497,7 @@ def render_geographic_logistics():
 
 
 # --- Main App Logic ---
-if page == "Business Health Cockpit":
+if page == "Business Health":
     render_business_health_cockpit()
 elif page == "Product Portfolio Performance":
     render_product_portfolio_performance()
