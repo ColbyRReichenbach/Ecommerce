@@ -174,7 +174,7 @@ def render_business_health_cockpit():
 
 
 def render_product_portfolio_performance():
-    st.title("Product Portfolio Performance")
+    st.title("🎯 Product Portfolio Performance")
     st.markdown("Identify which products and categories drive success and monitor returns.")
 
     cat_perf_df = get_category_performance_matrix(engine, selected_start_date, selected_end_date)
@@ -184,20 +184,64 @@ def render_product_portfolio_performance():
         st.warning("No category performance data for the selected period/filter.")
         return
 
-    # Merge performance and return data
+    cat_data_merged = cat_perf_df.copy() # Start with a copy
+
     if not cat_returns_df.empty:
-        cat_data_merged = pd.merge(cat_perf_df, cat_returns_df, on="product_category_name_english", how="left")
-        cat_data_merged['return_rate_percentage'] = cat_data_merged['return_rate_percentage'].fillna(0)
+        cat_data_merged = pd.merge(cat_data_merged, cat_returns_df, on="product_category_name_english", how="left")
+        # return_rate_percentage might have NaNs if a category from cat_perf_df isn't in cat_returns_df
     else:
-        cat_data_merged = cat_perf_df.copy()
-        cat_data_merged['return_rate_percentage'] = 0
-        cat_data_merged['avg_review_score'] = cat_data_merged.get('avg_review_score', 0)
+        # Ensure the column exists even if cat_returns_df is empty
+        cat_data_merged['return_rate_percentage'] = pd.NA # Use pd.NA initially
+
+    # Ensure 'avg_review_score' exists if it wasn't in cat_perf_df (should be, but good to check)
+    if 'avg_review_score' not in cat_data_merged.columns:
+        cat_data_merged['avg_review_score'] = pd.NA # Use pd.NA initially
+    
+    # --- Crucial Data Cleaning and Type Conversion for Plotly ---
+    st.write("--- Debug: `cat_data_merged` before type conversion and cleaning ---")
+    st.dataframe(cat_data_merged.head())
+    st.write(cat_data_merged.dtypes)
+
+    # Columns expected by px.scatter for x, y, size, color
+    numeric_cols_for_plot = {
+        "total_units_sold": 0,
+        "total_revenue": 0.0,
+        "avg_review_score": 0.0,  # For size
+        "return_rate_percentage": 0.0 # For color
+    }
+
+    for col, default_value in numeric_cols_for_plot.items():
+        if col not in cat_data_merged.columns:
+            st.warning(f"Column '{col}' missing from merged data for scatter plot. Creating with default: {default_value}.")
+            cat_data_merged[col] = default_value
+        else:
+            # Convert to numeric, coercing errors to NaN, then fill NaN with the default
+            cat_data_merged[col] = pd.to_numeric(cat_data_merged[col], errors='coerce').fillna(default_value)
+            # Ensure it's a standard Python float/int for Plotly if it's still Decimal or other odd types
+            if col in ["total_revenue", "avg_review_score", "return_rate_percentage"]:
+                 cat_data_merged[col] = cat_data_merged[col].astype(float)
+            elif col == "total_units_sold":
+                 cat_data_merged[col] = cat_data_merged[col].astype(int)
 
 
-    # KPIs
-    top_cat_revenue = cat_data_merged.loc[cat_data_merged['total_revenue'].idxmax()] if not cat_data_merged.empty else None
-    top_cat_units = cat_data_merged.loc[cat_data_merged['total_units_sold'].idxmax()] if not cat_data_merged.empty else None
-    highest_return_cat = cat_data_merged.loc[cat_data_merged['return_rate_percentage'].idxmax()] if not cat_data_merged.empty and 'return_rate_percentage' in cat_data_merged.columns else None
+    st.write("--- Debug: `cat_data_merged` AFTER type conversion and cleaning ---")
+    st.dataframe(cat_data_merged.head())
+    st.write(cat_data_merged.dtypes)
+    # --- End of Crucial Data Cleaning ---
+
+
+    # KPIs (ensure they use the cleaned data if necessary, or original if preferred)
+    # This KPI logic might need to re-evaluate based on potentially altered cat_data_merged values
+    # For now, let's assume original calculation for KPIs was fine, or adjust if needed.
+    top_cat_revenue_df = cat_data_merged.nlargest(1, 'total_revenue')
+    top_cat_revenue = top_cat_revenue_df.iloc[0] if not top_cat_revenue_df.empty else None
+    
+    top_cat_units_df = cat_data_merged.nlargest(1, 'total_units_sold')
+    top_cat_units = top_cat_units_df.iloc[0] if not top_cat_units_df.empty else None
+
+    highest_return_cat_df = cat_data_merged.nlargest(1, 'return_rate_percentage')
+    highest_return_cat = highest_return_cat_df.iloc[0] if not highest_return_cat_df.empty else None
+
 
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -209,58 +253,38 @@ def render_product_portfolio_performance():
     
     st.subheader("Category Performance Matrix (Revenue vs. Units)")
     if not cat_data_merged.empty:
-        # green (low) to red (high)
-        # larger for higher scores
-        fig_matrix = px.scatter(cat_data_merged,
-                                x="total_units_sold",
-                                y="total_revenue",
-                                size="avg_review_score", 
-                                color="return_rate_percentage",
-                                hover_name="product_category_name_english",
-                                color_continuous_scale=px.colors.diverging.RdYlGn_r, 
-                                range_color=[0, max(10, cat_data_merged['return_rate_percentage'].max())],
-                                title="Categories: Units vs Revenue (Size=Avg Review, Color=Return Rate)",
-                                labels={'total_units_sold': 'Total Units Sold', 'total_revenue': 'Total Revenue ($)', 'return_rate_percentage': 'Return Rate (%)', 'avg_review_score':'Avg Review Score'})
+        # Determine if size aesthetic can be applied meaningfully
+        size_column = "avg_review_score"
+        apply_size = False
+        if size_column in cat_data_merged.columns and cat_data_merged[size_column].nunique() > 1 and cat_data_merged[size_column].max() > 0:
+            apply_size = True
+            # Ensure size values are not too small for Plotly to render
+            cat_data_merged[size_column] = cat_data_merged[size_column].apply(lambda x: max(x, 0.1) if pd.notnull(x) else 0.1) # Ensure a minimum size if not null
+
+        color_column = "return_rate_percentage"
+        apply_color = False
+        if color_column in cat_data_merged.columns:
+            apply_color = True
+
+        fig_matrix = px.scatter(
+            cat_data_merged,
+            x="total_units_sold",
+            y="total_revenue",
+            size=size_column if apply_size else None,
+            color=color_column if apply_color else None,
+            hover_name="product_category_name_english", # Make sure this column name is correct
+            color_continuous_scale=px.colors.diverging.RdYlGn_r if apply_color else None,
+            range_color=[0, max(10, cat_data_merged[color_column].max())] if apply_color and not cat_data_merged[color_column].empty else None,
+            title="Categories: Units vs Revenue" + ((" (Size=" + size_column) if apply_size else "") + (", Color=" + color_column + ")") if apply_color else ""),
+            labels={'total_units_sold': 'Total Units Sold', 
+                    'total_revenue': 'Total Revenue ($)', 
+                    color_column: 'Return Rate (%)' if apply_color else '', 
+                    size_column:'Avg Review Score' if apply_size else ''}
+        )
         fig_matrix.update_traces(textposition='top center')
         st.plotly_chart(fig_matrix, use_container_width=True)
     else:
-        st.info("Not enough data for performance matrix.")
-
-    tab1, tab2 = st.tabs(["Top/Bottom Categories by Revenue", "Return Rates by Category"])
-    with tab1:
-        st.subheader("Top N & Bottom N Categories by Revenue")
-        sorted_cats = cat_data_merged.sort_values(by="total_revenue", ascending=False)
-        n_cats = st.slider("Select N for Top/Bottom categories", 5, min(20, len(sorted_cats)), 10)
-
-        col_top, col_bottom = st.columns(2)
-        with col_top:
-            st.write(f"Top {n_cats} Categories")
-            fig_top_cats = px.bar(sorted_cats.head(n_cats), x="total_revenue", y="product_category_name_english", orientation='h', color="total_revenue", text_auto='.2s', title=f"Top {n_cats} Categories by Revenue")
-            fig_top_cats.update_layout(yaxis={'categoryorder':'total ascending'})
-            st.plotly_chart(fig_top_cats, use_container_width=True)
-        with col_bottom:
-            st.write(f"Bottom {n_cats} Categories")
-            fig_bottom_cats = px.bar(sorted_cats.tail(n_cats).sort_values(by="total_revenue", ascending=True), x="total_revenue", y="product_category_name_english", orientation='h', color="total_revenue", text_auto='.2s', title=f"Bottom {n_cats} Categories by Revenue")
-            fig_bottom_cats.update_layout(yaxis={'categoryorder':'total ascending'}) # To show smallest at bottom
-            st.plotly_chart(fig_bottom_cats, use_container_width=True)
-    with tab2:
-        st.subheader("Return/Cancellation Rate by Category")
-        if not cat_returns_df.empty: 
-            fig_returns = px.bar(cat_returns_df.sort_values(by="return_rate_percentage", ascending=False).head(20),
-                                 x="product_category_name_english", y="return_rate_percentage",
-                                 color="return_rate_percentage", color_continuous_scale=px.colors.sequential.Reds,
-                                 title="Return Rate (%) by Category (Top 20)",
-                                 labels={'return_rate_percentage': 'Return Rate (%)'})
-            st.plotly_chart(fig_returns, use_container_width=True)
-        else:
-            st.info("No return rate data for this period.")
-
-    st.markdown("""
-    **What Does This Mean?**
-    - High-performing categories (high revenue, high units, good reviews, low returns) are your stars.
-    - Categories with high returns need investigation into product quality, descriptions, or customer expectations.
-    - Low revenue/low unit categories might be candidates for discontinuation or revised marketing.
-    """)
+        st.info("Not enough data for performance matrix after cleaning.")
 
 def render_sales_funnel_dynamics():
     st.title("Sales Funnel & Order Dynamics")
