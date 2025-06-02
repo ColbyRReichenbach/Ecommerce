@@ -195,10 +195,6 @@ def render_product_portfolio_performance():
         
     if 'avg_review_score' not in cat_data_merged.columns:
         cat_data_merged['avg_review_score'] = pd.NA 
-    
-    st.write("--- Debug: `cat_data_merged` before type conversion and cleaning ---")
-    st.dataframe(cat_data_merged.head())
-    st.write(cat_data_merged.dtypes)
 
     # Columns expected by px.scatter for x, y, size, color
     numeric_cols_for_plot = {
@@ -220,11 +216,6 @@ def render_product_portfolio_performance():
                  cat_data_merged[col] = cat_data_merged[col].astype(float)
             elif col == "total_units_sold":
                  cat_data_merged[col] = cat_data_merged[col].astype(int)
-
-
-    st.write("--- Debug: `cat_data_merged` AFTER type conversion and cleaning ---")
-    st.dataframe(cat_data_merged.head())
-    st.write(cat_data_merged.dtypes)
  
     top_cat_revenue_df = cat_data_merged.nlargest(1, 'total_revenue')
     top_cat_revenue = top_cat_revenue_df.iloc[0] if not top_cat_revenue_df.empty else None
