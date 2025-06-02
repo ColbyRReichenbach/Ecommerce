@@ -141,9 +141,8 @@ def get_category_performance_matrix(_engine, start_date, end_date):
     SELECT
         p.product_category_name_english,
         SUM(oi.price + oi.freight_value) AS total_revenue,
-        COUNT(DISTINCT oi.order_item_id) AS total_units_sold, -- Assuming order_item_id is unique per item line
+        COUNT(DISTINCT oi.order_item_id) AS total_units_sold,
         COALESCE(AVG(r.review_score), 0) AS avg_review_score -- Added average review score
-        -- Add calculation for return rate per category if feasible
     FROM order_items oi
     JOIN products p ON oi.product_id = p.product_id
     JOIN orders o ON oi.order_id = o.order_id
