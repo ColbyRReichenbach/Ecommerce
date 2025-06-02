@@ -227,12 +227,7 @@ def render_product_portfolio_performance():
     st.write("--- Debug: `cat_data_merged` AFTER type conversion and cleaning ---")
     st.dataframe(cat_data_merged.head())
     st.write(cat_data_merged.dtypes)
-    # --- End of Crucial Data Cleaning ---
-
-
-    # KPIs (ensure they use the cleaned data if necessary, or original if preferred)
-    # This KPI logic might need to re-evaluate based on potentially altered cat_data_merged values
-    # For now, let's assume original calculation for KPIs was fine, or adjust if needed.
+ 
     top_cat_revenue_df = cat_data_merged.nlargest(1, 'total_revenue')
     top_cat_revenue = top_cat_revenue_df.iloc[0] if not top_cat_revenue_df.empty else None
     
@@ -251,35 +246,73 @@ def render_product_portfolio_performance():
     with col3:
         if highest_return_cat is not None: display_kpi("Highest Return Rate Cat.", f"{highest_return_cat['product_category_name_english']}", f"{highest_return_cat['return_rate_percentage']:.2f}%")
     
-    st.subheader("Category Performance Matrix (Revenue vs. Units)")
+     st.subheader("Category Performance Matrix (Revenue vs. Units)")
     if not cat_data_merged.empty:
-        # Determine if size aesthetic can be applied meaningfully
-        size_column = "avg_review_score"
-        apply_size = False
-        if size_column in cat_data_merged.columns and cat_data_merged[size_column].nunique() > 1 and cat_data_merged[size_column].max() > 0:
-            apply_size = True
-            # Ensure size values are not too small for Plotly to render
-            cat_data_merged[size_column] = cat_data_merged[size_column].apply(lambda x: max(x, 0.1) if pd.notnull(x) else 0.1) # Ensure a minimum size if not null
+        # Prepare data for Plotly by ensuring they are Pandas Series or NumPy arrays
+        x_data = cat_data_merged["total_units_sold"]
+        y_data = cat_data_merged["total_revenue"]
+        hover_name_data = cat_data_merged["product_category_name_english"] # Ensure this column name is correct
 
-        color_column = "return_rate_percentage"
+        size_column_name = "avg_review_score"
+        size_data = None
+        apply_size = False
+        if size_column_name in cat_data_merged.columns and \
+           cat_data_merged[size_column_name].nunique() > 1 and \
+           cat_data_merged[size_column_name].max() > 0:
+            apply_size = True
+            size_data = cat_data_merged[size_column_name].apply(lambda x: max(x, 0.1) if pd.notnull(x) else 0.1)
+            # Explicitly convert to NumPy array if it's a Narwhals series or similar
+            if not isinstance(size_data, (pd.Series, np.ndarray)): # Import numpy as np
+                 size_data = np.array(size_data.tolist()) # Fallback to list then array
+            elif isinstance(size_data, pd.Series):
+                 size_data = size_data.to_numpy()
+
+
+        color_column_name = "return_rate_percentage"
+        color_data = None
         apply_color = False
-        if color_column in cat_data_merged.columns:
+        if color_column_name in cat_data_merged.columns:
             apply_color = True
+            color_data = cat_data_merged[color_column_name]
+            # Explicitly convert to NumPy array
+            if not isinstance(color_data, (pd.Series, np.ndarray)):
+                 color_data = np.array(color_data.tolist())
+            elif isinstance(color_data, pd.Series):
+                 color_data = color_data.to_numpy()
+
+
+        # Ensure x_data and y_data are also in a good format (usually Pandas Series are fine, but let's be safe)
+        if not isinstance(x_data, (pd.Series, np.ndarray)):
+            x_data = np.array(x_data.tolist())
+        elif isinstance(x_data, pd.Series):
+            x_data = x_data.to_numpy()
+
+        if not isinstance(y_data, (pd.Series, np.ndarray)):
+            y_data = np.array(y_data.tolist())
+        elif isinstance(y_data, pd.Series):
+            y_data = y_data.to_numpy()
+            
+        if not isinstance(hover_name_data, (pd.Series, np.ndarray)):
+            hover_name_data = np.array(hover_name_data.tolist())
+        elif isinstance(hover_name_data, pd.Series):
+            hover_name_data = hover_name_data.to_numpy()
+
 
         fig_matrix = px.scatter(
-            cat_data_merged,
-            x="total_units_sold",
-            y="total_revenue",
-            size=size_column if apply_size else None,
-            color=color_column if apply_color else None,
-            hover_name="product_category_name_english", # Make sure this column name is correct
+            data_frame=cat_data_merged,
+            x=x_data,
+            y=y_data,
+            size=size_data if apply_size else None,
+            color=color_data if apply_color else None,
+            hover_name=hover_name_data,
             color_continuous_scale=px.colors.diverging.RdYlGn_r if apply_color else None,
-            range_color=[0, max(10, cat_data_merged[color_column].max())] if apply_color and not cat_data_merged[color_column].empty else None,
-            title="Categories: Units vs Revenue" + ((" (Size=" + size_column) if apply_size else "") + (", Color=" + color_column + ")") if apply_color else ""),
-            labels={'total_units_sold': 'Total Units Sold', 
-                    'total_revenue': 'Total Revenue ($)', 
-                    color_column: 'Return Rate (%)' if apply_color else '', 
-                    size_column:'Avg Review Score' if apply_size else ''}
+            range_color=[0, max(10, color_data.max())] if apply_color and color_data is not None and len(color_data)>0 else None,
+            title="Categories: Units vs Revenue" + ((" (Size=" + size_column_name) if apply_size else "") + (", Color=" + color_column_name + ")") if apply_color else ""),
+            labels={'x': 'Total Units Sold', 
+                    'y': 'Total Revenue ($)',
+                    'color': 'Return Rate (%)' if apply_color else '',
+                    'size':'Avg Review Score' if apply_size else '',
+                    'hover_name': 'Category'} 
         )
         fig_matrix.update_traces(textposition='top center')
         st.plotly_chart(fig_matrix, use_container_width=True)
