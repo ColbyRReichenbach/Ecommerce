@@ -80,7 +80,6 @@ page = st.sidebar.radio(
         "Sales Funnel & Order Dynamics",
         "Customer Behavior & Value",
         "Geographic Performance & Logistics",
-        "Customer Segmentation Deep Dive"
     ]
 )
 
@@ -394,13 +393,6 @@ def render_customer_behavior_value():
         st.plotly_chart(fig_clv_hist, use_container_width=True)
     else:
         st.info("No CLV data.")
-    
-    # RFM Segmentation - Placeholder (Requires offline calculation or complex live query)
-    st.subheader("RFM Segmentation (Placeholder)")
-    st.info("RFM Segmentation requires more complex offline data processing or queries. Displaying placeholder.")
-    # if rfm_data:
-    #   fig_rfm = px.scatter(rfm_data, x='Recency', y='Frequency', size='Monetary', color='Segment')
-    #   st.plotly_chart(fig_rfm)
 
     st.subheader("Top Product Categories: Repeat vs. First-Time Customers")
     col_rep, col_first = st.columns(2)
@@ -524,7 +516,5 @@ elif page == "Customer Behavior & Value":
     render_customer_behavior_value()
 elif page == "Geographic Performance & Logistics":
     render_geographic_logistics()
-elif page == "Customer Segmentation Deep Dive":
-    render_customer_segmentation()
 
 st.sidebar.markdown("---")
