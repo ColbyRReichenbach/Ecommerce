@@ -174,7 +174,7 @@ def render_business_health_cockpit():
 
 
 def render_product_portfolio_performance():
-    st.title("🎯 Product Portfolio Performance")
+    st.title("Product Portfolio Performance")
     st.markdown("Identify which products and categories drive success and monitor returns.")
 
     cat_perf_df = get_category_performance_matrix(engine, selected_start_date, selected_end_date)
@@ -184,20 +184,17 @@ def render_product_portfolio_performance():
         st.warning("No category performance data for the selected period/filter.")
         return
 
-    cat_data_merged = cat_perf_df.copy() # Start with a copy
+    cat_data_merged = cat_perf_df.copy()
 
     if not cat_returns_df.empty:
         cat_data_merged = pd.merge(cat_data_merged, cat_returns_df, on="product_category_name_english", how="left")
-        # return_rate_percentage might have NaNs if a category from cat_perf_df isn't in cat_returns_df
     else:
         # Ensure the column exists even if cat_returns_df is empty
-        cat_data_merged['return_rate_percentage'] = pd.NA # Use pd.NA initially
-
-    # Ensure 'avg_review_score' exists if it wasn't in cat_perf_df (should be, but good to check)
+        cat_data_merged['return_rate_percentage'] = pd.NA 
+        
     if 'avg_review_score' not in cat_data_merged.columns:
-        cat_data_merged['avg_review_score'] = pd.NA # Use pd.NA initially
+        cat_data_merged['avg_review_score'] = pd.NA 
     
-    # --- Crucial Data Cleaning and Type Conversion for Plotly ---
     st.write("--- Debug: `cat_data_merged` before type conversion and cleaning ---")
     st.dataframe(cat_data_merged.head())
     st.write(cat_data_merged.dtypes)
@@ -251,7 +248,7 @@ def render_product_portfolio_performance():
         # Prepare data for Plotly by ensuring they are Pandas Series or NumPy arrays
         x_data = cat_data_merged["total_units_sold"]
         y_data = cat_data_merged["total_revenue"]
-        hover_name_data = cat_data_merged["product_category_name_english"] # Ensure this column name is correct
+        hover_name_data = cat_data_merged["product_category_name_english"] 
 
         size_column_name = "avg_review_score"
         size_data = None
@@ -262,7 +259,7 @@ def render_product_portfolio_performance():
             apply_size = True
             size_data = cat_data_merged[size_column_name].apply(lambda x: max(x, 0.1) if pd.notnull(x) else 0.1)
             # Explicitly convert to NumPy array if it's a Narwhals series or similar
-            if not isinstance(size_data, (pd.Series, np.ndarray)): # Import numpy as np
+            if not isinstance(size_data, (pd.Series, np.ndarray)):
                  size_data = np.array(size_data.tolist()) # Fallback to list then array
             elif isinstance(size_data, pd.Series):
                  size_data = size_data.to_numpy()
@@ -274,14 +271,12 @@ def render_product_portfolio_performance():
         if color_column_name in cat_data_merged.columns:
             apply_color = True
             color_data = cat_data_merged[color_column_name]
-            # Explicitly convert to NumPy array
             if not isinstance(color_data, (pd.Series, np.ndarray)):
                  color_data = np.array(color_data.tolist())
             elif isinstance(color_data, pd.Series):
                  color_data = color_data.to_numpy()
 
 
-        # Ensure x_data and y_data are also in a good format (usually Pandas Series are fine, but let's be safe)
         if not isinstance(x_data, (pd.Series, np.ndarray)):
             x_data = np.array(x_data.tolist())
         elif isinstance(x_data, pd.Series):
@@ -299,21 +294,22 @@ def render_product_portfolio_performance():
 
 
         fig_matrix = px.scatter(
-        data_frame=cat_data_merged,
-        x=x_data,
-        y=y_data,
-        size=size_data if apply_size else None,
-        color=color_data if apply_color else None,
-        hover_name=hover_name_data,
-        color_continuous_scale=px.colors.diverging.RdYlGn_r if apply_color else None,
-        range_color=[0, max(10, color_data.max())] if apply_color and color_data is not None and len(color_data)>0 else None,
-        title="Categories: Units vs Revenue" + ((" (Size=" + size_column_name) if apply_size else "") + (", Color=" + color_column_name + ")") if apply_color else ""),
-        labels={'x': 'Total Units Sold', 
+            # Pass the DataFrame for other potential uses by Plotly, but specify main aesthetics with prepared arrays/series
+            data_frame=cat_data_merged, # Still useful for Plotly to have the full context
+            x=x_data,
+            y=y_data,
+            size=size_data if apply_size else None,
+            color=color_data if apply_color else None,
+            hover_name=hover_name_data,
+            color_continuous_scale=px.colors.diverging.RdYlGn_r if apply_color else None,
+            range_color=[0, max(10, color_data.max())] if apply_color and color_data is not None and len(color_data)>0 else None,
+            title="Categories: Units vs Revenue" + ((" (Size=" + size_column_name) if apply_size else "") + (", Color=" + color_column_name + ")") if apply_color else ""),
+            labels={'x': 'Total Units Sold', # Use generic 'x', 'y' if passing arrays directly
                     'y': 'Total Revenue ($)',
                     'color': 'Return Rate (%)' if apply_color else '',
                     'size':'Avg Review Score' if apply_size else '',
-                    'hover_name': 'Category'} 
-    )
+                    'hover_name': 'Category'} # Adjust hover_name label
+        )
         fig_matrix.update_traces(textposition='top center')
         st.plotly_chart(fig_matrix, use_container_width=True)
     else:
