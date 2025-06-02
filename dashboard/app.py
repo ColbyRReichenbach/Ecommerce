@@ -246,7 +246,7 @@ def render_product_portfolio_performance():
     with col3:
         if highest_return_cat is not None: display_kpi("Highest Return Rate Cat.", f"{highest_return_cat['product_category_name_english']}", f"{highest_return_cat['return_rate_percentage']:.2f}%")
     
-     st.subheader("Category Performance Matrix (Revenue vs. Units)")
+    st.subheader("Category Performance Matrix (Revenue vs. Units)")
     if not cat_data_merged.empty:
         # Prepare data for Plotly by ensuring they are Pandas Series or NumPy arrays
         x_data = cat_data_merged["total_units_sold"]
