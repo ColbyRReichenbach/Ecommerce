@@ -174,7 +174,7 @@ def render_business_health_cockpit():
 
 
 def render_product_portfolio_performance():
-    st.title("🎯 Product Portfolio Performance")
+    st.title("Product Portfolio Performance")
     st.markdown("Identify which products and categories drive success and monitor returns.")
 
     cat_perf_df = get_category_performance_matrix(engine, selected_start_date, selected_end_date)
@@ -263,7 +263,7 @@ def render_product_portfolio_performance():
     """)
 
 def render_sales_funnel_dynamics():
-    st.title("📈 Sales Funnel & Order Dynamics")
+    st.title("Sales Funnel & Order Dynamics")
     st.markdown("Understand order lifecycle, purchasing patterns, and operational efficiency.")
 
     # --- KPIs ---
@@ -353,7 +353,7 @@ def render_sales_funnel_dynamics():
     """)
 
 def render_customer_behavior_value():
-    st.title("👥 Customer Behavior & Value")
+    st.title("Customer Behavior & Value")
     st.markdown("Understand customer value, loyalty drivers, and preferences.")
 
     # KPIs
@@ -421,7 +421,7 @@ def render_customer_behavior_value():
 
 
 def render_geographic_logistics():
-    st.title("🌍 Geographic Performance & Logistics")
+    st.title("Geographic Performance & Logistics")
     st.markdown("Understand regional sales, shipping efficiencies, and optimize delivery.")
 
     # KPIs - Placeholder (derive from the chart data below)
