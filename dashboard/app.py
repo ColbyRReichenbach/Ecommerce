@@ -539,4 +539,3 @@ elif page == "Customer Segmentation Deep Dive":
     render_customer_segmentation()
 
 st.sidebar.markdown("---")
-st.sidebar.info("Dashboard by You! | Data: E-commerce Kaggle Dataset")
