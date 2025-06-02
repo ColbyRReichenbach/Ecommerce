@@ -318,15 +318,6 @@ def render_sales_funnel_dynamics():
     else:
         st.info("No order status data for the selected period.")
 
-    st.subheader("Revenue by Number of Items in Order")
-    revenue_items_df = get_revenue_by_items_in_order(engine, selected_start_date, selected_end_date)
-    if not revenue_items_df.empty:
-        fig_rev_items = px.bar(revenue_items_df, x='items_per_order', y='total_revenue_from_order_size', title='Total Revenue by Order Size (Number of Items)')
-        fig_rev_items.update_layout(xaxis_title="Number of Items in Order", yaxis_title="Total Revenue ($)")
-        st.plotly_chart(fig_rev_items, use_container_width=True)
-    else:
-        st.info("No data on revenue by items in order for the selected period.")
-
     st.subheader("Peak Order Times (Heatmap)")
     peak_times_df_for_heatmap = get_peak_order_times(engine, selected_start_date, selected_end_date) # Re-fetch or use previously fetched df
     if not peak_times_df_for_heatmap.empty:
