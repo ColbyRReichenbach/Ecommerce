@@ -23,7 +23,6 @@ st.set_page_config(page_title="E-Commerce Advanced Analytics", layout="wide")
 # --- Database Connection ---
 @st.cache_resource # Cache the engine resource
 def init_db_engine():
-    :
         DATABASE_URL = st.secrets["DATABASE_URL"]
         engine = create_engine(DATABASE_URL)
         return engine
