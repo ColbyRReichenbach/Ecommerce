@@ -58,19 +58,6 @@ selected_start_date, selected_end_date = st.sidebar.date_input(
 selected_start_date = datetime.combine(selected_start_date, datetime.min.time())
 selected_end_date = datetime.combine(selected_end_date, datetime.max.time())
 
-# Region Filter (Customer State)
-all_states_df = query_database(engine, "SELECT DISTINCT customer_state FROM customers WHERE customer_state IS NOT NULL ORDER BY 1;")
-if not all_states_df.empty:
-    all_states = ["All"] + all_states_df["customer_state"].tolist()
-    selected_region_filter = st.sidebar.selectbox("Filter by Customer State", all_states, key="region_filter_global")
-    if selected_region_filter == "All":
-        selected_region_filter = None # Set to None if 'All' is selected
-else:
-    st.sidebar.text("No states found for filter.")
-    selected_region_filter = None # Fallback
-
-
-
 # --- Page Navigation ---
 st.sidebar.title("Navigation")
 page = st.sidebar.radio(
