@@ -310,7 +310,6 @@ def render_product_portfolio_performance():
      # --- CRITICAL DEBUG POINT FOR TABS ---
     st.write("--- Debug PPP: 9. Right before st.tabs() call. ---")
 
-    try:
         tab_top_bottom, tab_returns = st.tabs([
             "🏆 Top/Bottom Categories",
             "↩️ Return Rates"
