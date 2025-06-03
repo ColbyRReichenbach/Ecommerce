@@ -307,14 +307,10 @@ def render_product_portfolio_performance():
     else:
         st.info("Not enough data for performance matrix after cleaning.")
 
-     # --- CRITICAL DEBUG POINT FOR TABS ---
-    st.write("--- Debug PPP: 9. Right before st.tabs() call. ---")
-
     tab_top_bottom, tab_returns = st.tabs([
         "Top/Bottom Categories",
         "Return Rates"
     ])
-    st.write("--- Debug PPP: 10. st.tabs() created. Now trying to enter 'Top/Bottom Categories' tab. ---")
 
 
     with tab_top_bottom:
