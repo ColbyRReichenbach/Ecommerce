@@ -168,9 +168,10 @@ def render_business_health_cockpit():
 
     st.markdown("""
     **What Does This Mean?**
-    - This cockpit provides a snapshot of core business performance.
-    - Growth in revenue should ideally be supported by growth in orders and/or AOV.
-    - A healthy mix of new and returning customer revenue indicates sustainable growth.
+    * **Critical Reliance on New Customers:** Nearly 100% of revenue is consistently generated from new customers. This highlights a significant gap in customer retention, indicating that the business is primarily driven by new acquisitions rather than repeat business.
+    * **Stable Core Performance with Notable Dip:** Overall revenue and order volumes show consistent month-to-month performance, suggesting stable demand or acquisition. However, a distinct dip in both metrics in December 2017 requires attention to understand its cause (e.g., seasonality, stock, marketing changes).
+    * **AOV Volatility Presents Opportunity:** The Average Order Value (AOV) fluctuates between $147 and $166. This variability indicates an opportunity to implement strategies that could consistently lift AOV, thereby increasing revenue per transaction.
+    * **Potential Threat to Long-Term Profitability:** While the estimated Gross Profit Margin (e.g., 40%) might seem adequate, the heavy dependence on acquiring new customers (which is often more costly than retaining existing ones) could be impacting overall net profitability and long-term sustainability.
     """)
 
 
@@ -306,6 +307,135 @@ def render_product_portfolio_performance():
     else:
         st.info("Not enough data for performance matrix after cleaning.")
 
+    tab_top_bottom, tab_returns = st.tabs([
+        "Top/Bottom Categories",
+        "↩Return Rates"
+    ])
+
+    with tab_top_bottom:
+        st.subheader("Category Rankings")
+
+        # Let user choose what to rank by
+        rank_by = st.radio(
+            "Rank categories by:",
+            ("Total Revenue", "Total Units Sold"),
+            key="rank_by_selector"
+        )
+
+        if not cat_data_merged.empty:
+            if rank_by == "Total Revenue":
+                sort_column = "total_revenue"
+                chart_label = "Total Revenue ($)"
+                text_format = '.2s' # Format for currency
+            else: # Total Units Sold
+                sort_column = "total_units_sold"
+                chart_label = "Total Units Sold"
+                text_format = True # Default for counts
+
+            if sort_column in cat_data_merged.columns:
+                sorted_cats = cat_data_merged.sort_values(by=sort_column, ascending=False)
+                
+                n_cats = st.slider(
+                    f"Select N for Top/Bottom categories (by {rank_by})",
+                    min_value=3,
+                    max_value=min(20, len(sorted_cats)), # Avoid error if fewer than 20 categories
+                    value=10, # Default to 10
+                    key=f"n_cats_slider_{sort_column}"
+                )
+
+                col_top, col_bottom = st.columns(2)
+
+                with col_top:
+                    st.markdown(f"**Top {n_cats} Categories by {rank_by}**")
+                    top_n_df = sorted_cats.head(n_cats)
+                    if not top_n_df.empty:
+                        fig_top_cats = px.bar(
+                            top_n_df,
+                            x=sort_column,
+                            y="product_category_name_english",
+                            orientation='h',
+                            color=sort_column,
+                            color_continuous_scale=px.colors.sequential.Greens_r, # Darker green for higher values
+                            text_auto=text_format,
+                            title=f"Top {n_cats} Categories"
+                        )
+                        fig_top_cats.update_layout(
+                            yaxis_title="Category",
+                            xaxis_title=chart_label,
+                            yaxis={'categoryorder': 'total ascending'} # Shows highest value at the top
+                        )
+                        st.plotly_chart(fig_top_cats, use_container_width=True)
+                    else:
+                        st.info(f"Not enough data for Top {n_cats} categories by {rank_by}.")
+
+                with col_bottom:
+                    st.markdown(f"**Bottom {n_cats} Categories by {rank_by}**")
+                    # For bottom N, we take the tail of the descending sort, then sort ascending for display
+                    bottom_n_df = sorted_cats.tail(n_cats).sort_values(by=sort_column, ascending=True)
+                    if not bottom_n_df.empty:
+                        fig_bottom_cats = px.bar(
+                            bottom_n_df,
+                            x=sort_column,
+                            y="product_category_name_english",
+                            orientation='h',
+                            color=sort_column,
+                            color_continuous_scale=px.colors.sequential.Reds_r, # Use different color scale for bottom
+                            text_auto=text_format,
+                            title=f"Bottom {n_cats} Categories"
+                        )
+                        fig_bottom_cats.update_layout(
+                            yaxis_title="Category",
+                            xaxis_title=chart_label,
+                            yaxis={'categoryorder': 'total ascending'} # Shows lowest value at the bottom
+                        )
+                        st.plotly_chart(fig_bottom_cats, use_container_width=True)
+                    else:
+                        st.info(f"Not enough data for Bottom {n_cats} categories by {rank_by}.")
+            else:
+                st.warning(f"Column '{sort_column}' not found in category data.")
+        else:
+            st.info("No category data available for ranking.")
+
+
+    with tab_returns:
+        st.subheader("Return/Cancellation Rates by Category")
+        if not cat_returns_df.empty and 'return_rate_percentage' in cat_returns_df.columns:
+            # Sort by return rate to show highest first, and take top N (e.g., top 20)
+            top_n_returns = st.slider(
+                "Number of categories to display for return rates",
+                min_value=5,
+                max_value=min(30, len(cat_returns_df)),
+                value=15,
+                key="n_returns_slider"
+            )
+            
+            sorted_returns_df = cat_returns_df.sort_values(by="return_rate_percentage", ascending=False).head(top_n_returns)
+            
+            if not sorted_returns_df.empty:
+                fig_returns = px.bar(
+                    sorted_returns_df,
+                    x="product_category_name_english",
+                    y="return_rate_percentage",
+                    color="return_rate_percentage",
+                    color_continuous_scale=px.colors.sequential.Reds, # Higher returns are more red
+                    text_auto='.2f', # Format percentage to 2 decimal places
+                    title=f"Top {top_n_returns} Categories by Return Rate (%)"
+                )
+                fig_returns.update_layout(
+                    xaxis_title="Category",
+                    yaxis_title="Return Rate (%)",
+                    xaxis={'categoryorder':'total descending'} # Shows highest return rate bar first
+                )
+                st.plotly_chart(fig_returns, use_container_width=True)
+            else:
+                st.info("Not enough data to display return rates after filtering.")
+        else:
+            st.info("No return rate data available or 'return_rate_percentage' column missing.")
+
+    st.markdown("""
+    ---
+    **What Does This Mean?**""")
+    
 def render_sales_funnel_dynamics():
     st.title("Sales Funnel & Order Dynamics")
     st.markdown("Understand order lifecycle, purchasing patterns, and operational efficiency.")
