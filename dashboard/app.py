@@ -67,7 +67,6 @@ page = st.sidebar.radio(
         "Product Portfolio Performance",
         "Sales Funnel & Order Dynamics",
         "Customer Behavior & Value",
-        "Geographic Performance & Logistics",
     ]
 )
 
