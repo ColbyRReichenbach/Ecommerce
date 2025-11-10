@@ -308,15 +308,15 @@ page = st.sidebar.radio(
         "Product Portfolio Performance",
         "Sales Funnel & Order Dynamics",
         "Customer Behavior & Value",
-        "Geographic Performance & Logistics",
+        #"Geographic Performance & Logistics",
     ]
 )
 
-st.sidebar.markdown("### Focus Filters")
-selected_region_filter_input = st.sidebar.text_input(
-    "Region focus (state code or leave blank)",
-    value="",
-    help="Type a two-letter state code to spotlight geographic insights (e.g., SP).",
+#st.sidebar.markdown("### Focus Filters")
+#selected_region_filter_input = st.sidebar.text_input(
+   # "Region focus (state code or leave blank)",
+    #value="",
+    #help="Type a two-letter state code to spotlight geographic insights (e.g., SP).",
 )
 selected_region_filter = selected_region_filter_input.strip().upper() or None
 
@@ -1274,7 +1274,7 @@ elif page == "Sales Funnel & Order Dynamics":
     render_sales_funnel_dynamics()
 elif page == "Customer Behavior & Value":
     render_customer_behavior_value()
-elif page == "Geographic Performance & Logistics":
-    render_geographic_logistics()
+#elif page == "Geographic Performance & Logistics":
+    #render_geographic_logistics()
 
 st.sidebar.markdown("---")
