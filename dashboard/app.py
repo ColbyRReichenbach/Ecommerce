@@ -317,8 +317,7 @@ page = st.sidebar.radio(
    # "Region focus (state code or leave blank)",
     #value="",
     #help="Type a two-letter state code to spotlight geographic insights (e.g., SP).",
-)
-selected_region_filter = selected_region_filter_input.strip().upper() or None
+# selected_region_filter = selected_region_filter_input.strip().upper() or None
 
 st.sidebar.markdown("### Quick Tips")
 st.sidebar.caption("🔍 Hover charts for precise values • ⏱️ Adjust the date range to compare seasons • 📤 Use the download arrows to export visuals.")
