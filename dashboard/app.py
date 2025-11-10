@@ -687,7 +687,6 @@ def render_business_health_cockpit():
                     marker=dict(size=6),
                 )
             )
-            fig = stylize_chart(fig, title="Revenue vs. Orders Momentum")
             fig.update_layout(
                 yaxis=dict(title=dict(text='Total Revenue ($)', font=dict(color='#4f46e5'))),
                 yaxis2=dict(
@@ -756,7 +755,6 @@ def render_business_health_cockpit():
                 )
             )
             fig_nvr.update_layout(barmode='stack')
-            fig_nvr = stylize_chart(fig_nvr, title="Monthly Revenue by Customer Type")
             st.plotly_chart(fig_nvr, use_container_width=True)
             st.markdown('<p class="chart-caption">Retention revenue remains muted—activate re-engagement programs to diversify growth.</p>', unsafe_allow_html=True)
         else:
@@ -1242,7 +1240,6 @@ def render_customer_behavior_value():
                     y='product_category_name_english',
                     x='total_revenue_for_category',
                     orientation='h',
-                    title='Top Categories (Repeat Customers)',
                     labels={'product_category_name_english': 'Category', 'total_revenue_for_category': 'Revenue ($)'},
                     color='total_revenue_for_category',
                     color_continuous_scale=px.colors.sequential.Greens,
@@ -1262,7 +1259,6 @@ def render_customer_behavior_value():
                     y='product_category_name_english',
                     x='total_revenue_for_category',
                     orientation='h',
-                    title='Top Categories (First-Time Customers)',
                     labels={'product_category_name_english': 'Category', 'total_revenue_for_category': 'Revenue ($)'},
                     color='total_revenue_for_category',
                     color_continuous_scale=px.colors.sequential.Blues,
