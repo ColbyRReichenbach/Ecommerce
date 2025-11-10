@@ -36,7 +36,7 @@ This project delivers an internal analytics dashboard for an e-commerce business
 
 ## Dashboard Link
 I have deployed a **live** version of this dashboard at:  
-**[Streamlit Cloud Link](https://ecommerce-dhsrx49ubnacpn9adyrh9n.streamlit.app)**  
+**[Streamlit Cloud Link]([https://ecommerce-dhsrx49ubnacpn9adyrh9n.streamlit.app](https://ecommerce-dhsrx49ubnacpn9adyrh9n.streamlit.app/?embed_options=light_theme))**  
 
 Use the sidebar to navigate betIen different analytics modules.
 
