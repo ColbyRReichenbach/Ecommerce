@@ -457,8 +457,12 @@ def render_business_health_cockpit():
             )
             fig = stylize_chart(fig, title="Revenue vs. Orders Momentum")
             fig.update_layout(
-                yaxis=dict(title='Total Revenue ($)', titlefont=dict(color='#4f46e5')),
-                yaxis2=dict(title='Total Orders', overlaying='y', side='right', titlefont=dict(color='#38bdf8')),
+                yaxis=dict(title=dict(text='Total Revenue ($)', font=dict(color='#4f46e5'))),
+                yaxis2=dict(
+                    title=dict(text='Total Orders', font=dict(color='#38bdf8')),
+                    overlaying='y',
+                    side='right',
+                ),
             )
             st.plotly_chart(fig, use_container_width=True)
             st.markdown('<p class="chart-caption">Revenue (left axis) vs. order volume (right axis) across the selected period.</p>', unsafe_allow_html=True)
