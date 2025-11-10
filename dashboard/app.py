@@ -307,23 +307,45 @@ def stylize_chart(fig, *, title: str | None = None, legend_orientation: str = "h
     current_title = title if title is not None else (fig.layout.title.text if fig.layout.title else None)
     title_font = dict(family="Inter, sans-serif", size=20, color="#0f172a")
     title_config = dict(text=current_title, x=0, xanchor="left", font=title_font) if current_title else None
+    if title_config:
+        title_config["pad"] = dict(b=12)
     legend_font = dict(family="Inter, sans-serif", size=12, color="#0f172a")
+
+    layout_margin = dict(t=70 if current_title else 40, l=40, r=30, b=50)
+    legend_layout = dict(
+        orientation=legend_orientation,
+        yanchor="bottom",
+        y=1.02,
+        xanchor="left",
+        x=0,
+        bgcolor="rgba(255,255,255,0.6)",
+        bordercolor="rgba(79,70,229,0.15)",
+        borderwidth=1,
+        font=legend_font,
+    )
+
+    if legend_orientation == "h":
+        legend_layout.update(
+            yanchor="bottom",
+            y=1.16,
+            xanchor="left",
+            x=0,
+        )
+        layout_margin["t"] = max(layout_margin["t"], 110 if current_title else 90)
+    else:
+        legend_layout.update(
+            yanchor="top",
+            y=0.98,
+            xanchor="left",
+            x=1.02,
+        )
+        layout_margin["r"] = max(layout_margin["r"], 140)
 
     fig.update_layout(
         template="plotly_white",
         title=title_config,
-        margin=dict(t=70 if current_title else 40, l=40, r=20, b=45),
-        legend=dict(
-            orientation=legend_orientation,
-            yanchor="bottom",
-            y=1.02,
-            xanchor="left",
-            x=0,
-            bgcolor="rgba(255,255,255,0.6)",
-            bordercolor="rgba(79,70,229,0.15)",
-            borderwidth=1,
-            font=legend_font,
-        ),
+        margin=layout_margin,
+        legend=legend_layout,
         font=dict(family="Inter, sans-serif", size=13, color="#0f172a"),
         hoverlabel=dict(bgcolor="#111827", font_size=12, font_family="Inter, sans-serif"),
         paper_bgcolor="rgba(0,0,0,0)",
