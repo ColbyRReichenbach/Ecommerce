@@ -1099,9 +1099,9 @@ def render_sales_funnel_dynamics():
             st.info("No order status data for the selected period.")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    with st.container():
-        st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        render_section_header(
+    # with st.container():
+        # st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        # render_section_header(
             "Revenue by Basket Size",
             "🛍️",
             "Reveal how multi-item orders contribute to revenue to fine-tune bundling incentives.",
