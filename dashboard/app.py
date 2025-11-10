@@ -152,6 +152,19 @@ body {
 [data-testid="stMetricDelta"] {
     font-size: 0.82rem;
     margin-top: 0.35rem;
+    font-weight: 600;
+}
+
+[data-testid="stMetricDelta"]:has(svg[data-testid="stMetricDeltaIcon-Up"]) {
+    color: #166534 !important;
+}
+
+[data-testid="stMetricDelta"]:has(svg[data-testid="stMetricDeltaIcon-Down"]) {
+    color: #b91c1c !important;
+}
+
+[data-testid="stMetricDelta"] svg {
+    fill: currentColor !important;
 }
 
 .chart-caption {
@@ -168,6 +181,41 @@ body {
     padding: 0.25rem 0.85rem;
     border-radius: 999px;
     margin: 0 0.25rem;
+}
+
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] span,
+[data-testid="stSidebar"] div[data-baseweb="select"] *,
+[data-testid="stSidebar"] input,
+[data-testid="stSidebar"] textarea {
+    color: #0f172a !important;
+}
+
+[data-testid="stSidebar"] div[data-baseweb="select"] > div {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(15, 23, 42, 0.25) !important;
+    border-radius: 0.75rem !important;
+}
+
+[data-testid="stSidebar"] div[role="radiogroup"] label {
+    color: #0f172a !important;
+    font-weight: 600;
+}
+
+[data-testid="stSidebar"] div[role="radiogroup"] label > div {
+    color: inherit !important;
+}
+
+[data-testid="stSidebar"] .stSlider span,
+[data-testid="stSidebar"] .stSlider label {
+    color: #0f172a !important;
+    font-weight: 600;
+}
+
+[data-testid="stSidebar"] .stSlider [role="slider"] {
+    box-shadow: none !important;
+    background: #4f46e5 !important;
+    border: 2px solid rgba(15, 23, 42, 0.35);
 }
 </style>
 """
@@ -232,8 +280,25 @@ def stylize_chart(fig, *, title: str | None = None, legend_orientation: str = "h
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
     )
-    fig.update_xaxes(showgrid=True, gridcolor="rgba(148, 163, 184, 0.25)", linecolor="rgba(15, 23, 42, 0.2)")
-    fig.update_yaxes(showgrid=True, gridcolor="rgba(148, 163, 184, 0.25)", linecolor="rgba(15, 23, 42, 0.2)")
+    axis_tickfont = dict(color="#0f172a", size=12)
+    axis_titlefont = dict(color="#0f172a", size=13, family="Inter, sans-serif")
+
+    fig.update_xaxes(
+        showgrid=True,
+        gridcolor="rgba(148, 163, 184, 0.25)",
+        linecolor="rgba(15, 23, 42, 0.35)",
+        tickfont=axis_tickfont,
+        title_font=axis_titlefont,
+        zerolinecolor="rgba(15, 23, 42, 0.35)",
+    )
+    fig.update_yaxes(
+        showgrid=True,
+        gridcolor="rgba(148, 163, 184, 0.25)",
+        linecolor="rgba(15, 23, 42, 0.35)",
+        tickfont=axis_tickfont,
+        title_font=axis_titlefont,
+        zerolinecolor="rgba(15, 23, 42, 0.35)",
+    )
     return fig
 
 
