@@ -1099,31 +1099,6 @@ def render_sales_funnel_dynamics():
             st.info("No order status data for the selected period.")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # with st.container():
-        # st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        # render_section_header(
-            "Revenue by Basket Size",
-            "🛍️",
-            "Reveal how multi-item orders contribute to revenue to fine-tune bundling incentives.",
-        )
-        revenue_items_df = get_revenue_by_items_in_order(engine, selected_start_date, selected_end_date)
-        if revenue_items_df is not None and not revenue_items_df.empty:
-            revenue_items_df = revenue_items_df.sort_values(by='items_in_order')
-            fig_basket = px.area(
-                revenue_items_df,
-                x='items_in_order',
-                y='total_revenue',
-                title='Revenue Contribution by Items per Order',
-                labels={'items_in_order': 'Items in Order', 'total_revenue': 'Total Revenue ($)'},
-                color_discrete_sequence=["#6366f1"],
-            )
-            fig_basket = stylize_chart(fig_basket)
-            st.plotly_chart(fig_basket, use_container_width=True)
-            st.markdown('<p class="chart-caption">Use free shipping thresholds or bundles to shift demand toward higher-value baskets.</p>', unsafe_allow_html=True)
-        else:
-            st.info("No revenue by items-in-order data for the selected period.")
-        st.markdown("</div>", unsafe_allow_html=True)
-
     with st.container():
         st.markdown('<div class="section-card">', unsafe_allow_html=True)
         render_section_header(
