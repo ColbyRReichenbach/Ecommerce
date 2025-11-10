@@ -1236,6 +1236,7 @@ def render_customer_behavior_value():
             repeat_cats_df = get_top_categories_for_customer_type(engine, selected_start_date, selected_end_date, customer_type='repeat')
             if not repeat_cats_df.empty:
                 fig_rep_cats = px.bar(
+                    repeat_cats_df,
                     y='product_category_name_english',
                     x='total_revenue_for_category',
                     orientation='h',
