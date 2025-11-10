@@ -217,6 +217,52 @@ body {
     background: #4f46e5 !important;
     border: 2px solid rgba(15, 23, 42, 0.35);
 }
+
+  [data-testid="stDateInput"] label {
+      color: #0f172a !important;
+      font-weight: 600;
+  }
+
+  [data-testid="stDateInput"] input {
+      color: #0f172a !important;
+      background: rgba(255, 255, 255, 0.95) !important;
+      border: 1px solid rgba(79, 70, 229, 0.35) !important;
+      border-radius: 0.65rem !important;
+      padding: 0.45rem 0.6rem !important;
+      font-weight: 600;
+  }
+
+  [data-testid="stDateInput"] [data-baseweb="calendar"] {
+      background: rgba(255, 255, 255, 0.98) !important;
+      color: #0f172a !important;
+  }
+
+  [data-testid="stSelectbox"] label {
+      color: #0f172a !important;
+      font-weight: 600;
+  }
+
+  [data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+      background: rgba(255, 255, 255, 0.95) !important;
+      border: 1px solid rgba(79, 70, 229, 0.35) !important;
+      border-radius: 0.75rem !important;
+  }
+
+  [data-testid="stRadioGroup"] label {
+      color: #0f172a !important;
+      font-weight: 600 !important;
+  }
+
+  [data-testid="stRadioGroup"] div[role="radiogroup"] > div {
+      border-radius: 999px;
+      border: 1px solid rgba(79, 70, 229, 0.25);
+      background: rgba(255, 255, 255, 0.9);
+  }
+
+  [data-testid="stRadioGroup"] div[role="radiogroup"] > div[aria-checked="true"] {
+      background: rgba(79, 70, 229, 0.15);
+      border-color: rgba(79, 70, 229, 0.6);
+  }
 </style>
 """
 
@@ -259,7 +305,9 @@ def render_insight_callout(title: str, bullets: list[str]) -> None:
 def stylize_chart(fig, *, title: str | None = None, legend_orientation: str = "h"):
     """Apply a consistent styling theme to Plotly charts."""
     current_title = title if title is not None else (fig.layout.title.text if fig.layout.title else None)
-    title_config = dict(text=current_title, x=0, xanchor="left") if current_title else None
+    title_font = dict(family="Inter, sans-serif", size=20, color="#0f172a")
+    title_config = dict(text=current_title, x=0, xanchor="left", font=title_font) if current_title else None
+    legend_font = dict(family="Inter, sans-serif", size=12, color="#0f172a")
 
     fig.update_layout(
         template="plotly_white",
@@ -274,6 +322,7 @@ def stylize_chart(fig, *, title: str | None = None, legend_orientation: str = "h
             bgcolor="rgba(255,255,255,0.6)",
             bordercolor="rgba(79,70,229,0.15)",
             borderwidth=1,
+            font=legend_font,
         ),
         font=dict(family="Inter, sans-serif", size=13, color="#0f172a"),
         hoverlabel=dict(bgcolor="#111827", font_size=12, font_family="Inter, sans-serif"),
@@ -348,21 +397,117 @@ st.sidebar.title("Global Filters")
 # Date Range Selector (already implemented and seems okay)
 min_max_dates_df = get_min_max_order_dates(engine)
 if not min_max_dates_df.empty:
-    MIN_DATE = pd.to_datetime(min_max_dates_df['min_date'].iloc[0])
-    MAX_DATE = pd.to_datetime(min_max_dates_df['max_date'].iloc[0])
+    MIN_DATE = pd.to_datetime(min_max_dates_df['min_date'].iloc[0]).normalize()
+    MAX_DATE = pd.to_datetime(min_max_dates_df['max_date'].iloc[0]).normalize()
 else:
-    MIN_DATE = datetime.now() - timedelta(days=365*3) # Approx 3 years back
-    MAX_DATE = datetime.now()
+    fallback_now = datetime.now()
+    MAX_DATE = pd.Timestamp(fallback_now).normalize()
+    MIN_DATE = pd.Timestamp(fallback_now - timedelta(days=365 * 3)).normalize()  # Approx 3 years back
 
-selected_start_date, selected_end_date = st.sidebar.date_input(
-    "Select Date Range",
-    value=(MAX_DATE - timedelta(days=365), MAX_DATE),
-    min_value=MIN_DATE,
-    max_value=MAX_DATE,
-    key="date_range_selector"
+min_date_date = MIN_DATE.date()
+max_date_date = MAX_DATE.date()
+
+PRESET_DAY_WINDOWS = {
+    "Last 7 days": 7,
+    "Last 14 days": 14,
+    "Last 30 days": 30,
+    "Last 90 days": 90,
+}
+PRESET_OPTIONS = [
+    "Last 7 days",
+    "Last 14 days",
+    "Last 30 days",
+    "Last 90 days",
+    "Year to date",
+    "Full history",
+    "Custom range",
+]
+
+def _clamp_dates(start_ts: pd.Timestamp, end_ts: pd.Timestamp) -> tuple[pd.Timestamp, pd.Timestamp]:
+    start_clamped = max(start_ts, MIN_DATE)
+    end_clamped = min(end_ts, MAX_DATE)
+    if start_clamped > end_clamped:
+        start_clamped = end_clamped
+    return start_clamped, end_clamped
+
+def _compute_preset_range(preset_name: str) -> tuple[pd.Timestamp, pd.Timestamp] | None:
+    if preset_name in PRESET_DAY_WINDOWS:
+        window_days = PRESET_DAY_WINDOWS[preset_name]
+        start_candidate = MAX_DATE - timedelta(days=window_days - 1)
+        return _clamp_dates(start_candidate, MAX_DATE)
+    if preset_name == "Year to date":
+        year_start_candidate = MAX_DATE.replace(month=1, day=1)
+        return _clamp_dates(year_start_candidate, MAX_DATE)
+    if preset_name == "Full history":
+        return _clamp_dates(MIN_DATE, MAX_DATE)
+    return None
+
+total_available_days = (max_date_date - min_date_date).days
+default_preset = "Last 90 days" if total_available_days >= 90 else "Full history"
+
+if "quick_date_preset" not in st.session_state:
+    st.session_state["quick_date_preset"] = default_preset
+if "_last_quick_preset" not in st.session_state:
+    st.session_state["_last_quick_preset"] = st.session_state["quick_date_preset"]
+
+initial_preset_range = _compute_preset_range(st.session_state["quick_date_preset"]) or _clamp_dates(MIN_DATE, MAX_DATE)
+if "date_range_selector" not in st.session_state:
+    st.session_state["date_range_selector"] = (
+        initial_preset_range[0].date(),
+        initial_preset_range[1].date(),
+    )
+
+quick_date_preset = st.sidebar.selectbox(
+    "Quick Date Range",
+    PRESET_OPTIONS,
+    key="quick_date_preset",
 )
-selected_start_date = datetime.combine(selected_start_date, datetime.min.time())
-selected_end_date = datetime.combine(selected_end_date, datetime.max.time())
+
+if quick_date_preset != st.session_state.get("_last_quick_preset"):
+    preset_range = _compute_preset_range(quick_date_preset)
+    if quick_date_preset != "Custom range" and preset_range:
+        st.session_state["date_range_selector"] = (
+            preset_range[0].date(),
+            preset_range[1].date(),
+        )
+    st.session_state["_last_quick_preset"] = quick_date_preset
+
+selected_date_range = st.sidebar.date_input(
+    "Select Date Range",
+    min_value=min_date_date,
+    max_value=max_date_date,
+    key="date_range_selector",
+)
+
+if isinstance(selected_date_range, tuple) and len(selected_date_range) == 2:
+    raw_start_date, raw_end_date = selected_date_range
+else:
+    raw_start_date = raw_end_date = selected_date_range
+
+selected_start_timestamp = pd.Timestamp(raw_start_date)
+selected_end_timestamp = pd.Timestamp(raw_end_date)
+selected_start_timestamp, selected_end_timestamp = _clamp_dates(selected_start_timestamp, selected_end_timestamp)
+
+clamped_date_tuple = (
+    selected_start_timestamp.date(),
+    selected_end_timestamp.date(),
+)
+
+if st.session_state["date_range_selector"] != clamped_date_tuple:
+    st.session_state["date_range_selector"] = clamped_date_tuple
+
+if quick_date_preset != "Custom range":
+    preset_match = _compute_preset_range(quick_date_preset)
+    if (
+        preset_match is None
+        or (preset_match[0].date(), preset_match[1].date()) != clamped_date_tuple
+    ):
+        st.session_state["quick_date_preset"] = "Custom range"
+        st.session_state["_last_quick_preset"] = "Custom range"
+        quick_date_preset = "Custom range"
+
+selected_start_date = datetime.combine(selected_start_timestamp.date(), datetime.min.time())
+selected_end_date = datetime.combine(selected_end_timestamp.date(), datetime.max.time())
 
 # --- Page Navigation ---
 st.sidebar.title("Navigation")
